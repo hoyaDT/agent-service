@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "function_id": "INSTRUCTION_CHECK",
+    "function_type": "instruction_validation",
+    "description": "检查用户输入的自然语言指令是否包含所有必选项，且表达清晰。",
+    "version": "1.1"
+  },
+  "required_parameters": {
+    "code": {
+      "type": "string",
+      "description": "指令代号，必须明确指定，例如 K01、K405。"
+    },
+    "associatedTelemetry": {
+      "type": "array",
+      "description": "关联的遥测量，每个对象包含遥测代号与遥测判据。",
+      "item_structure": {
+        "groupInfo": "遥测代号，例如'PKOSV2AS5_TMAS05001'。",
+        "criterionInStr": "遥测判据，必须能够映射到以下15种支持的情况之一：1)等于X、2)大于等于X、3)大于X且小于Y、4)大于X且小于等于Y、5)小于等于X、6)小于X、7)等于A或B、8)在X到Y之间（闭区间）、9)与上次值的差值大于等于X、10)与上次值的差值在X到Y之间、11)在(X,Y)区间内且变化步长为Z、12)大于等于X且小于Y、13)在A、B、C之中、14)在[X,Y]或[M,N]之间、15)与上次值的差值小于等于X。其他描述不被支持，可以直接返回用户“此遥测判据目前尚不支持”。"
+      }
+    },
+    "logicalRelationAmongTelemetry": {
+      "type": "string",
+      "description": "判读逻辑，用户用自然语言表达是否需要同时满足还是任意一个即可。例如：'同时满足'、'两者都要' → and；'任意一个即可'、'只要其中一个' → or。其他表达你能判断为 and 或 or 的都可以接受。"
+    }
+  },
+  "optional_parameters": {
+    "interpretationTimeSetting": {
+      "type": "object",
+      "description": "判读时间设置，仅当用户明确给出秒数与连续次数时才需要启用。",
+      "fields": {
+        "enabled": "布尔值，若用户提供 totalTime(秒) 和 continuousTimes，则为 true。",
+        "continuousTimes": "整数，连续判读次数。",
+        "totalTime": "整数，判读时长（秒）。"
+      },
+      "activation_rules": {
+        "enabled_only_if": [
+          "用户输入中明确出现 totalTime（以秒为单位）和 continuousTimes（次数）。"
+        ],
+        "clarify_if_only_one_present": [
+          "若只给出秒数而无连续次数，提示用户补充次数。",
+          "若只给出连续次数而无秒数，提示用户补充时间窗口。"
+        ],
+        "treat_as_disabled_when": [
+          "未出现任何具体的秒数与连续次数。",
+          "只出现模糊时间描述如 '短时间内'、'一段时间'，不得启用。"
+        ]
+      }
+    }
+  },
+  "validation_rules": [
+    "必须包含指令代号",
+    "必须包含至少两个遥测代号",
+    "必须包含判据的自然语言描述，且该描述必须可映射到15种支持的情况之一",
+    "必须包含判读逻辑，且能够归一化为 and 或 or",
+    "只有当用户明确提到“连续次数”和“时长（秒）”时，时间设置才算完整"
+  ],
+  "lexicon": {
+    "logical_relation": {
+      "and": ["且", "并且", "同时", "两者都", "必须都", "全部都", "共同满足"],
+      "or": ["或", "或者", "任意一个", "其中一个", "有一个", "至少一个", "满足其一"]
+    }
+  },
+  "examples": [
+    "在发送 K405 指令后，判断 PKOSV2AS5_TMAS05001 与 PKOSV2AS5_TMAS05002 的遥测值是否都必须等于 5。",
+    "在发送 K409 指令后，判断 PKOSV2AS5_TMAS05003 或 PKOSV2AS5_TMAS05004 的遥测值，只要其中一个在 28 到 33 之间即可。",
+    "在发送 K419 指令后，判断 PKOSV2AT1_TMAT01005 和 PKOSV2AT1_TMAT01006 的遥测值，在 10 秒内连续 3 次都小于 100 才算满足条件。",
+    "在发送 K34 指令后，判断 PKOSV2AT1_TMAT01010 或 PKOSV2AT1_TMAT01011 的遥测值，任取其一为 1 或 3 即可。"
+  ]
+}

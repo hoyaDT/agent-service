@@ -1,0 +1,19 @@
+# FastAPI 栈
+fastapi==0.116.1
+uvicorn==0.35.0
+pydantic==2.11.7
+pydantic_core==2.33.2
+httpx==0.28.1
+requests==2.32.5
+python-dotenv==1.1.1
+
+# OpenAI / Agents
+openai==1.107.0
+openai-agents==0.2.11
+
+# Redis 支持
+redis==6.4.0
+
+# 可选依赖（MCP）
+mcp==1.13.1
+

@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "function_id": "COMMAND_TO_JSON",
+    "function_type": "json_generation",
+    "description": "根据完整的自然语言指令生成符合要求的标准 JSON。",
+    "version": "1.1"
+  },
+  "field_mapping": {
+    "code": {
+      "source": "自然语言中的指令代号（如 K405、K419）。",
+      "target": "JSON 字段 code"
+    },
+    "associatedTelemetry": {
+      "source": "自然语言中提到的每个遥测代号及其遥测判据描述。",
+      "target": "JSON 数组，每个元素包含 groupInfo（遥测代号）和 criterionInStr（判据表达式）。",
+      "groupInfo": "遥测代号，例如'PKOSV2AS5_TMAS05001'。",
+      "criterionInStr": "遥测判据，必须能够映射到criterion_translation_rules支持的情况之一",
+      "criterion_translation_rules": [
+        {"natural_language": "判断当前遥测值是否等于 X", "criterionInStr": "X"},
+        {"natural_language": "判断当前遥测值是否大于等于 X", "criterionInStr": "[X,)"},
+        {"natural_language": "判断当前遥测值是否大于 X 且小于 Y", "criterionInStr": "(X,Y)"},
+        {"natural_language": "判断当前遥测值是否大于 X 且小于等于 Y", "criterionInStr": "(X,Y]"},
+        {"natural_language": "判断当前遥测值是否小于等于 X", "criterionInStr": "(,X]"},
+        {"natural_language": "判断当前遥测值是否小于 X", "criterionInStr": "(,X)"},
+        {"natural_language": "判断当前遥测值是否等于 A 或 B", "criterionInStr": "A||B"},
+        {"natural_language": "判断当前遥测值是否在 X 到 Y 之间（闭区间）", "criterionInStr": "[X,Y]"},
+        {"natural_language": "判断当前遥测值与上次遥测值的差值是否大于等于X", "criterionInStr": "DIFF(X,)"},
+        {"natural_language": "判断当前遥测值与上次遥测值的差值是否大于等于X且小于等于Y", "criterionInStr": "DIFF(X,Y)"},
+        {"natural_language": "判断当前遥测值是否在 (X,Y) 区间内，且与上次遥测值相比变化步长为 Z ", "criterionInStr": "INCR(X,Y,Z)"},
+        {"natural_language": "判断当前遥测值是否大于等于 X且小于Y", "criterionInStr": "[X,Y)"},
+        {"natural_language": "判断当前遥测值是否在A、B、C之中", "criterionInStr": "A,B,C"},
+        {"natural_language": "判断当前遥测值是否在 [X,Y] 或 [M,N] 之间", "criterionInStr": "[X,Y]||[M,N]"},
+        {"natural_language": "判断当前遥测值是否大于X", "criterionInStr": "（X,)"},
+        {"natural_language": "判断当前遥测值与上次遥测值的差值是否小于等于 X", "criterionInStr": "DIFF(,X)"}
+      ]
+    },
+    "logicalRelationAmongTelemetry": {
+      "source": "自然语言中的逻辑词汇。例如：'同时满足'、'两者都要' → and；'任意一个即可'、'只要其中一个' → or。",
+      "target": "and 或 or"
+    },
+    "interpretationTimeSetting": {
+      "source": "自然语言中明确提到的连续次数与时长（秒）。如果没有明确提到字段，则直接忽略该部分。",
+      "target": "JSON 对象，包含 enabled、continuousTimes、totalTime。",
+      "enabled_only_if": "用户输入中明确出现 totalTime（以秒为单位）和 continuousTimes（次数）。",
+      "fields": {
+        "enabled": "布尔值，若用户提供 totalTime(秒) 和 continuousTimes，则为 true。",
+        "continuousTimes": "整数，连续判读次数。",
+        "totalTime": "整数，判读时长（秒）。"
+      }
+    }
+  },
+  "output_spec": {
+    "format": "最终输出必须是一个 JSON 数组，每个元素为一条完整的指令对象。",
+    "constraints": [
+      "不得改变键名或嵌套层次",
+      "不得省略必填字段",
+      "不得使用占位符，阈值必须从自然语言中提取的数值"
+    ]
+  },
+  "lexicon": {
+    "logical_relation": {
+      "and": ["且", "并且", "同时", "两者都", "必须都", "全部都", "共同满足"],
+      "or": ["或", "或者", "任意一个", "其中一个", "有一个", "至少一个", "满足其一"]
+    }
+  },
+  "examples": [
+    {
+      "natural_language": "在发送 K405 指令后，判断 PKOSV2AS5_TMAS05001 与 PKOSV2AS5_TMAS05002 的遥测值，两者都必须等于 5。",
+      "generated_json": [
+        {
+          "code": "K405",
+          "associatedTelemetry": [
+            {"groupInfo": "PKOSV2AS5_TMAS05001", "criterionInStr": "5"},
+            {"groupInfo": "PKOSV2AS5_TMAS05002", "criterionInStr": "5"}
+          ],
+          "logicalRelationAmongTelemetry": "and"
+        }
+      ]
+    },
+    {
+      "natural_language": "在发送 K419 指令后，判断 PKOSV2AT1_TMAT01005 和 PKOSV2AT1_TMAT01006 的遥测值，在 10 秒内连续 3 次都小于 100。",
+      "generated_json": [
+        {
+          "code": "K419",
+          "associatedTelemetry": [
+            {"groupInfo": "PKOSV2AT1_TMAT01005", "criterionInStr": "(,100)"},
+            {"groupInfo": "PKOSV2AT1_TMAT01006", "criterionInStr": "(,100)"}
+          ],
+          "logicalRelationAmongTelemetry": "and",
+          "interpretationTimeSetting": {
+            "enabled": true,
+            "continuousTimes": 3,
+            "totalTime": 10
+          }
+        }
+      ]
+    }
+  ]
+}
