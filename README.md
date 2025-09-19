@@ -42,7 +42,7 @@ docker ps
 
 ## 3. 文件结构
 
-```bash
+```
 agent-service/
 ├─ .venv                     # Python 虚拟环境
 ├─ main.py                   # FastAPI 主程序
