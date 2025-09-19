@@ -2,7 +2,7 @@ import os
 import json
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
-from agents import Agent, OpenAIChatCompletionsModel, Runner, function_tool, set_tracing_disabled
+from agents import Agent, OpenAIChatCompletionsModel, Runner, function_tool, set_tracing_disabled, ModelSettings
 import re
 
 # 读取 .env 配置
@@ -38,6 +38,7 @@ prompt_checker_agent = Agent(
         "当指令完整时，输出一句固定话：'指令完整'。\n"
     ),
     model=OpenAIChatCompletionsModel(model=MODEL_NAME, openai_client=client),
+    model_settings=ModelSettings(temperature=0.7),
     tools=[read_prompt_check_refer],
 )
 
@@ -51,6 +52,7 @@ json_generator_agent = Agent(
         "如果用户提出修改意见，请在现有 JSON 基础上进行最小化修改，不要改变整体结构。\n"
     ),
     model=OpenAIChatCompletionsModel(model=MODEL_NAME, openai_client=client),
+    model_settings=ModelSettings(temperature=0.0),
     tools=[read_json_generate_refer],
 )
 
