@@ -42,6 +42,7 @@ docker ps
 
 ## 3. 文件结构
 
+```
 agent-service/
 ├─ .venv                     # Python 虚拟环境
 ├─ main.py                   # FastAPI 主程序
@@ -54,6 +55,7 @@ agent-service/
 ├─ prompt_check_refer.json   # 指令检查参考文档
 ├─ json_generate_refer.json  # JSON 生成参考文档
 └─ README.md
+```
 
 
 ---
